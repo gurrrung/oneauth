@@ -1,40 +1,40 @@
-const models = require("../db/models").models,
-  generator = require("../utils/generator"),
-  config = require("../../config");
+const { models } = require('../db/models')
+const generator = require('../utils/generator')
+const config = require('../../config')
 
 function createGrantCode(clientId, userId) {
   return models.GrantCode.create({
     code: generator.genNcharAlphaNum(config.GRANT_TOKEN_SIZE),
     clientId,
-    userId
-  });
+    userId,
+  })
 }
 
 function createAuthToken(clientId, userId = null) {
   return models.AuthToken.create({
     token: generator.genNcharAlphaNum(config.AUTH_TOKEN_SIZE),
-    scope: ["*"],
+    scope: ['*'],
     explicit: false,
     clientId,
-    userId
-  });
+    userId,
+  })
 }
 
 function createRefreshToken(clientId, userId) {
   return models.AuthToken.create({
     token: generator.genNcharAlphaNum(config.AUTH_TOKEN_SIZE),
-    scope: ["*"],
+    scope: ['*'],
     explicit: false,
     clientId,
-    userId
-  });
+    userId,
+  })
 }
 
 function findGrantCode(code) {
   return models.GrantCode.findOne({
     where: { code },
-    include: [models.Client]
-  });
+    include: [models.Client],
+  })
 }
 
 function findOrCreateAuthToken(grantCode) {
@@ -42,40 +42,40 @@ function findOrCreateAuthToken(grantCode) {
     where: {
       clientId: grantCode.clientId,
       userId: grantCode.userId,
-      explicit: true
+      explicit: true,
     },
     defaults: {
       token: generator.genNcharAlphaNum(config.AUTH_TOKEN_SIZE),
-      scope: ["*"],
+      scope: ['*'],
       explicit: true,
       clientId: grantCode.clientId,
-      userId: grantCode.userId
-    }
-  });
+      userId: grantCode.userId,
+    },
+  })
 }
 
 function findAuthToken(clientId, userId) {
   return models.AuthToken.findOne({
     where: {
       clientId,
-      userId
-    }
-  });
+      userId,
+    },
+  })
 }
 
 function findAuthTokensByUserId(userId) {
   return models.AuthToken.findAll({
     where: { userId },
-    include: [models.Client]
-  });
+    include: [models.Client],
+  })
 }
 
 function deleteAuthToken(token) {
   return models.AuthToken.destroy({
     where: {
-      token: token
-    }
-  });
+      token,
+    },
+  })
 }
 
 module.exports = {
@@ -86,5 +86,5 @@ module.exports = {
   findOrCreateAuthToken,
   deleteAuthToken,
   findAuthTokensByUserId,
-  createRefreshToken
-};
+  createRefreshToken,
+}

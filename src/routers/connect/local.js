@@ -4,10 +4,12 @@
 const router = require('express').Router()
 const passport = require('../../passport/passporthandler')
 
-router.post('/', passport.authorize('local', {
+router.post(
+  '/',
+  passport.authorize('local', {
     failureRedirect: '/login',
-    successReturnToOrRedirect: '/users/me'
-}))
-
+    successReturnToOrRedirect: '/users/me',
+  })
+)
 
 module.exports = router

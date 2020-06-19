@@ -1,15 +1,12 @@
-const { 
-  getSubscriptions,
-  sendEvent
-} = require('../../utils/subscriptions')
+const { getSubscriptions, sendEvent } = require('../../utils/subscriptions')
 
 const getEventFunction = (type, sendType) => async (clientId, userId) => {
-  const subscriptions = await getSubscriptions('client', type);
+  const subscriptions = await getSubscriptions('client', type)
   return sendEvent(subscriptions, 'client', sendType, clientId, userId)
 }
 
 module.exports = {
   eventUserCreated: getEventFunction('create', 'CREATED'),
   eventUserUpdated: getEventFunction('update', 'UPDATED'),
-  eventUserDeleted: getEventFunction('delete', 'DELETED')
+  eventUserDeleted: getEventFunction('delete', 'DELETED'),
 }

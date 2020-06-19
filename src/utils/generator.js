@@ -4,10 +4,11 @@
 const uid2 = require('uid2')
 
 module.exports = {
-    genNdigitNum(N) {
-        return parseInt(Math.random() * (Math.pow(10, N)))
-    },
-    genNcharAlphaNum(N) {
-        return uid2(N)
-    }
+  genNdigitNum(N) {
+    // eslint-disable-next-line no-restricted-properties
+    return parseInt(Math.random() * Math.pow(10, N), 10)
+  },
+  genNcharAlphaNum(N) {
+    return uid2(N)
+  },
 }

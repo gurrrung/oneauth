@@ -4,23 +4,19 @@
  * This is the /api/v1 path
  */
 const router = require('express').Router()
-const { apiLimiter } = require('../../middlewares/ratelimit')
 const CORS = require('express-cors')
+const { apiLimiter } = require('../../middlewares/ratelimit')
 
-router.use(CORS({
-    allowedOrigins: [
-        '*.codingblocks.com', '*.codingblocks.xyz', 'localhost:*'
-    ],
-    headers: [
-        'X-Requested-With','content-type','Authorization'
-    ],
-    methods: [
-        'GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'
-    ]
-}))
+router.use(
+  CORS({
+    allowedOrigins: ['*.codingblocks.com', '*.codingblocks.xyz', 'localhost:*'],
+    headers: ['X-Requested-With', 'content-type', 'Authorization'],
+    methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'PATCH', 'DELETE'],
+  })
+)
 
 router.options('*', (req, res, next) => {
-    res.sendStatus(204)
+  res.sendStatus(204)
 })
 
 router.use(apiLimiter)

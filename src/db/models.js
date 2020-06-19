@@ -2,98 +2,196 @@
  * Created by championswimmer on 08/03/17.
  */
 const Sequelize = require('sequelize')
-const config = require('../../config')
-const secrets = config.SECRETS
 const debug = require('debug')('sql:models')
+
+const config = require('../../config')
+
+const secrets = config.SECRETS
 
 const db_name = secrets.DB.NAME
 const db_user = secrets.DB.USER
 const db_pass = secrets.DB.PASSWORD
 const db_host = secrets.DB.HOST
-const db_port = secrets.DB.PORT || "5432"
+const db_port = secrets.DB.PORT || '5432'
 const db_ssl = secrets.DB.SSL
 
 const DATABASE_URL =
-    process.env.DATABASE_URL ||
-    (`postgres://${db_user}:${db_pass}@${db_host}:${db_port}/${db_name}`)
+  process.env.DATABASE_URL ||
+  `postgres://${db_user}:${db_pass}@${db_host}:${db_port}/${db_name}`
 
-debug('Connecting to ' + DATABASE_URL)
+debug(`Connecting to ${DATABASE_URL}`)
 
 const db = new Sequelize(DATABASE_URL, {
+  ssl: db_ssl || false,
+  dialectOptions: {
     ssl: db_ssl || false,
-    dialectOptions: {
-        ssl: db_ssl || false
-    },
-    dialect: 'postgres',
-    pool: {
-        max: 5,
-        min: 0,
-        idle: 10000
-    },
-    logging: config.DEBUG ? console.log : false
+  },
+  dialect: 'postgres',
+  pool: {
+    max: 5,
+    min: 0,
+    idle: 10000,
+  },
+  logging: config.DEBUG ? console.log : false,
 })
 
 const definitions = {
-    social: require('./definitions/social'),
-    demographics: require('./definitions/demographics')
+  social: require('./definitions/social'),
+  demographics: require('./definitions/demographics'),
 }
 
-const User = db.define('user', {
-    id: {type: Sequelize.DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-    username: {type: Sequelize.DataTypes.STRING, unique: true, allowNull: false},
+const User = db.define(
+  'user',
+  {
+    id: {
+      type: Sequelize.DataTypes.BIGINT,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    username: {
+      type: Sequelize.DataTypes.STRING,
+      unique: true,
+      allowNull: false,
+    },
     firstname: Sequelize.DataTypes.STRING,
     lastname: Sequelize.DataTypes.STRING,
-    gender: {type: Sequelize.DataTypes.ENUM('MALE', 'FEMALE', 'UNDISCLOSED'), default: 'UNDISCLOSED'},
+    gender: {
+      type: Sequelize.DataTypes.ENUM('MALE', 'FEMALE', 'UNDISCLOSED'),
+      default: 'UNDISCLOSED',
+    },
     photo: Sequelize.DataTypes.STRING,
     email: Sequelize.DataTypes.STRING,
-    mobile_number: {type: Sequelize.DataTypes.STRING},
-    whatsapp_number: {type: Sequelize.DataTypes.STRING},
-    role: {type: Sequelize.DataTypes.ENUM('admin', 'employee', 'intern'), allowNull: true},
-    verifiedemail: {type: Sequelize.DataTypes.STRING, defaultValue: null, unique: true, allowNull: true},
-    verifiedmobile: {type: Sequelize.DataTypes.STRING, defaultValue: null, unique: true, allowNull: true},
-    referralCode: {type: Sequelize.DataTypes.STRING, defaultValue: null, unique:true, allowNull: true},
-    referredBy: {type: Sequelize.DataTypes.BIGINT, defaultValue: null, unique:false, allowNull:true},
-    graduationYear: {type: Sequelize.DataTypes.SMALLINT, defaultValue: null, unique:false, allowNull:true},
-    apparelGoodiesSize: {type: Sequelize.DataTypes.STRING, defaultValue: null, unique:false, allowNull:true},
-    marketing_meta : {type: Sequelize.DataTypes.JSON, defaultValue: null, unique:false, allowNull:true}
-}, {
-    paranoid: true
+    mobile_number: { type: Sequelize.DataTypes.STRING },
+    whatsapp_number: { type: Sequelize.DataTypes.STRING },
+    role: {
+      type: Sequelize.DataTypes.ENUM('admin', 'employee', 'intern'),
+      allowNull: true,
+    },
+    verifiedemail: {
+      type: Sequelize.DataTypes.STRING,
+      defaultValue: null,
+      unique: true,
+      allowNull: true,
+    },
+    verifiedmobile: {
+      type: Sequelize.DataTypes.STRING,
+      defaultValue: null,
+      unique: true,
+      allowNull: true,
+    },
+    referralCode: {
+      type: Sequelize.DataTypes.STRING,
+      defaultValue: null,
+      unique: true,
+      allowNull: true,
+    },
+    referredBy: {
+      type: Sequelize.DataTypes.BIGINT,
+      defaultValue: null,
+      unique: false,
+      allowNull: true,
+    },
+    graduationYear: {
+      type: Sequelize.DataTypes.SMALLINT,
+      defaultValue: null,
+      unique: false,
+      allowNull: true,
+    },
+    apparelGoodiesSize: {
+      type: Sequelize.DataTypes.STRING,
+      defaultValue: null,
+      unique: false,
+      allowNull: true,
+    },
+    marketing_meta: {
+      type: Sequelize.DataTypes.JSON,
+      defaultValue: null,
+      unique: false,
+      allowNull: true,
+    },
+  },
+  {
+    paranoid: true,
+  }
+)
+
+const Resetpassword = db.define(
+  'resetpassword',
+  {
+    id: {
+      type: Sequelize.DataTypes.BIGINT,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    key: { type: Sequelize.DataTypes.STRING, unique: true, allowNull: false },
+  },
+  {
+    paranoid: true,
+  }
+)
+
+const Verifyemail = db.define(
+  'verifyemail',
+  {
+    id: {
+      type: Sequelize.DataTypes.BIGINT,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    key: { type: Sequelize.DataTypes.STRING, unique: true, allowNull: false },
+    returnTo: { type: Sequelize.DataTypes.TEXT },
+  },
+  {
+    paranoid: true,
+  }
+)
+
+const VerifyMobile = db.define(
+  'verifymobile',
+  {
+    id: {
+      type: Sequelize.DataTypes.BIGINT,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    key: { type: Sequelize.DataTypes.STRING, allowNull: false },
+    mobile_number: {
+      type: Sequelize.DataTypes.STRING(15),
+      unique: true,
+      allowNull: false,
+    },
+  },
+  {
+    paranoid: true,
+  }
+)
+
+const UserMobileOTP = db.define(
+  'usermobileotp',
+  {
+    id: {
+      type: Sequelize.DataTypes.BIGINT,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    login_otp: { type: Sequelize.DataTypes.STRING, allowNull: false },
+    mobile_number: {
+      type: Sequelize.DataTypes.STRING(15),
+      unique: false,
+      allowNull: false,
+    },
+    used_at: { type: Sequelize.DataTypes.DATE, allowNull: true },
+  },
+  {
+    paranoid: true,
+  }
+)
+
+User.belongsTo(User, {
+  foreignKey: 'referredBy',
+  targetKey: 'id',
+  as: 'userReferredBy',
 })
-
-const Resetpassword = db.define('resetpassword', {
-    id: {type: Sequelize.DataTypes.BIGINT, autoIncrement: true, primaryKey: true},
-    key: {type: Sequelize.DataTypes.STRING, unique: true, allowNull: false},
-}, {
-    paranoid: true
-})
-
-const Verifyemail = db.define('verifyemail', {
-    id: {type: Sequelize.DataTypes.BIGINT, autoIncrement: true, primaryKey: true},
-    key: {type: Sequelize.DataTypes.STRING, unique: true, allowNull: false},
-    returnTo: {type: Sequelize.DataTypes.TEXT}
-}, {
-    paranoid: true
-})
-
-const VerifyMobile = db.define('verifymobile', {
-    id: {type: Sequelize.DataTypes.BIGINT, autoIncrement: true, primaryKey: true},
-    key: {type: Sequelize.DataTypes.STRING, allowNull: false},
-    mobile_number: {type: Sequelize.DataTypes.STRING(15), unique: true, allowNull: false},
-}, {
-    paranoid: true
-});
-
-
-const UserMobileOTP = db.define('usermobileotp', {
-    id: {type: Sequelize.DataTypes.BIGINT, autoIncrement: true, primaryKey: true},
-    login_otp: {type: Sequelize.DataTypes.STRING, allowNull: false},
-    mobile_number: {type: Sequelize.DataTypes.STRING(15), unique: false, allowNull: false},
-    used_at: {type: Sequelize.DataTypes.DATE, allowNull: true}
-}, {
-    paranoid: true
-});
-
-User.belongsTo(User,  {foreignKey: 'referredBy', targetKey :'id', as:'userReferredBy'})
 
 const UserLocal = db.define('userlocal', definitions.social.local)
 const UserFacebook = db.define('userfacebook', definitions.social.facebook)
@@ -104,45 +202,52 @@ const UserLinkedin = db.define('userlinkedin', definitions.social.linkedin)
 const UserLms = db.define('userlms', definitions.social.lms)
 
 UserLocal.belongsTo(User)
-User.hasOne(UserLocal, {foreignKey: {unique: true}})
+User.hasOne(UserLocal, { foreignKey: { unique: true } })
 
 UserFacebook.belongsTo(User)
-User.hasOne(UserFacebook, {foreignKey: {unique: true}})
+User.hasOne(UserFacebook, { foreignKey: { unique: true } })
 
 UserTwitter.belongsTo(User)
-User.hasOne(UserTwitter, {foreignKey: {unique: true}})
+User.hasOne(UserTwitter, { foreignKey: { unique: true } })
 
 UserGithub.belongsTo(User)
-User.hasOne(UserGithub, {foreignKey: {unique: true}})
+User.hasOne(UserGithub, { foreignKey: { unique: true } })
 
 UserGoogle.belongsTo(User)
-User.hasOne(UserGoogle, {foreignKey: {unique: true}})
+User.hasOne(UserGoogle, { foreignKey: { unique: true } })
 
 UserLinkedin.belongsTo(User)
-User.hasOne(UserLinkedin, {foreignKey: {unique: true}})
+User.hasOne(UserLinkedin, { foreignKey: { unique: true } })
 
 UserLms.belongsTo(User)
-User.hasOne(UserLms, {foreignKey: {unique: true}})
+User.hasOne(UserLms, { foreignKey: { unique: true } })
 
 Resetpassword.belongsTo(User)
 Verifyemail.belongsTo(User)
 VerifyMobile.belongsTo(User)
 UserMobileOTP.belongsTo(User)
 
-
-const Client = db.define('client', {
-    id: {type: Sequelize.DataTypes.BIGINT, primaryKey: true},
+const Client = db.define(
+  'client',
+  {
+    id: { type: Sequelize.DataTypes.BIGINT, primaryKey: true },
     name: Sequelize.DataTypes.STRING,
     secret: Sequelize.DataTypes.STRING,
     domain: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
     callbackURL: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
-    webhookURL: {type: Sequelize.DataTypes.STRING, default: null},
-    trusted: {type: Sequelize.DataTypes.BOOLEAN, default: false},
-    defaultURL: {type: Sequelize.DataTypes.STRING, allowNull: false, default: 'https://codingblocks.com/'},
-    androidOTPHash:  {type: Sequelize.DataTypes.STRING, default: null},
-}, {
-    paranoid: true
-})
+    webhookURL: { type: Sequelize.DataTypes.STRING, default: null },
+    trusted: { type: Sequelize.DataTypes.BOOLEAN, default: false },
+    defaultURL: {
+      type: Sequelize.DataTypes.STRING,
+      allowNull: false,
+      default: 'https://codingblocks.com/',
+    },
+    androidOTPHash: { type: Sequelize.DataTypes.STRING, default: null },
+  },
+  {
+    paranoid: true,
+  }
+)
 
 UserMobileOTP.belongsTo(Client)
 
@@ -150,54 +255,54 @@ Client.belongsTo(User)
 User.hasMany(Client)
 
 const Organisation = db.define('organisation', {
-    id: {type: Sequelize.DataTypes.INTEGER, primaryKey: true},
-    name: {type: Sequelize.DataTypes.STRING, allowNull: false},
-    full_name: {type: Sequelize.DataTypes.STRING, allowNull: false},
-    domain: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
-    website: Sequelize.DataTypes.STRING
+  id: { type: Sequelize.DataTypes.INTEGER, primaryKey: true },
+  name: { type: Sequelize.DataTypes.STRING, allowNull: false },
+  full_name: { type: Sequelize.DataTypes.STRING, allowNull: false },
+  domain: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
+  website: Sequelize.DataTypes.STRING,
 })
 
 const OrgAdmin = db.define('orgadmin', {
-    organisationId: Sequelize.DataTypes.INTEGER,
-    userId: Sequelize.DataTypes.BIGINT
+  organisationId: Sequelize.DataTypes.INTEGER,
+  userId: Sequelize.DataTypes.BIGINT,
 })
 
 User.belongsToMany(Organisation, {
-    through: {
-        model: OrgAdmin,
-        unique: false
-    }
+  through: {
+    model: OrgAdmin,
+    unique: false,
+  },
 })
 
 Organisation.belongsToMany(User, {
-    through: {
-        model: OrgAdmin,
-        unique: false
-    }
+  through: {
+    model: OrgAdmin,
+    unique: false,
+  },
 })
 
 const OrgMember = db.define('orgmember', {
-    organisationId: Sequelize.DataTypes.INTEGER,
-    userId: Sequelize.DataTypes.BIGINT,
-    email: Sequelize.DataTypes.STRING
+  organisationId: Sequelize.DataTypes.INTEGER,
+  userId: Sequelize.DataTypes.BIGINT,
+  email: Sequelize.DataTypes.STRING,
 })
 
 User.belongsToMany(Organisation, {
-    through: {
-        model: OrgMember,
-        unique: false
-    }
+  through: {
+    model: OrgMember,
+    unique: false,
+  },
 })
 
 Organisation.belongsToMany(User, {
-    through: {
-        model: OrgMember,
-        unique: false
-    }
+  through: {
+    model: OrgMember,
+    unique: false,
+  },
 })
 
 const GrantCode = db.define('grantcode', {
-    code: {type: Sequelize.DataTypes.STRING, primaryKey: true}
+  code: { type: Sequelize.DataTypes.STRING, primaryKey: true },
 })
 
 GrantCode.belongsTo(User)
@@ -206,11 +311,10 @@ User.hasMany(GrantCode)
 GrantCode.belongsTo(Client)
 Client.hasMany(GrantCode)
 
-
 const AuthToken = db.define('authtoken', {
-    token: {type: Sequelize.DataTypes.STRING, primaryKey: true},
-    scope: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
-    explicit: {type: Sequelize.DataTypes.BOOLEAN, default: false}
+  token: { type: Sequelize.DataTypes.STRING, primaryKey: true },
+  scope: Sequelize.DataTypes.ARRAY(Sequelize.DataTypes.STRING),
+  explicit: { type: Sequelize.DataTypes.BOOLEAN, default: false },
 })
 
 AuthToken.belongsTo(User)
@@ -220,24 +324,26 @@ AuthToken.belongsTo(Client)
 Client.hasMany(AuthToken)
 
 const Demographic = db.define('demographic', {
-    otherCollege: {
-        type: Sequelize.DataTypes.STRING
-    }
+  otherCollege: {
+    type: Sequelize.DataTypes.STRING,
+  },
 })
 
-Demographic.belongsTo(User)     // Demographic has userId
-User.Demographic = User.hasOne(Demographic)        // One user has only one demographic, so userId is UNIQUE
+// Demographic has userId
+Demographic.belongsTo(User)
+// One user has only one demographic, so userId is UNIQUE
+User.Demographic = User.hasOne(Demographic)
 
 const Address = db.define('address', definitions.demographics.address, {
-    indexes: [
-        {
-            name: 'unique_primary_address_index',
-            unique: true,
-            fields: ['demographicId'],
-            where: {primary: true}
-        }
-    ],
-    paranoid: true
+  indexes: [
+    {
+      name: 'unique_primary_address_index',
+      unique: true,
+      fields: ['demographicId'],
+      where: { primary: true },
+    },
+  ],
+  paranoid: true,
 })
 const State = db.define('state', definitions.demographics.state)
 const Country = db.define('country', definitions.demographics.country)
@@ -254,12 +360,10 @@ State.hasMany(Address)
 Address.belongsTo(Country)
 Country.hasMany(Address)
 
-
 // "Demographic" is the demographic of 'one' user
 
-Address.belongsTo(Demographic) //address will have demographicId
-Demographic.hasMany(Address)   //user can have multiple Address
-
+Address.belongsTo(Demographic) // address will have demographicId
+Demographic.hasMany(Address) // user can have multiple Address
 
 Demographic.belongsTo(College)
 College.hasMany(Demographic)
@@ -271,65 +375,73 @@ Demographic.belongsTo(Branch)
 Branch.hasMany(Demographic)
 
 const EventSubscription = db.define('event_subscription', {
-    id: {type: Sequelize.DataTypes.BIGINT, primaryKey: true, autoIncrement: true},
-    clientId: {type: Sequelize.DataTypes.BIGINT, references: {model: 'clients', key: 'id'}},
-    model: {type: Sequelize.DataTypes.ENUM('user', 'client', 'address', 'demographic')},
-    type: {type: Sequelize.DataTypes.ENUM('create', 'update', 'delete')}
+  id: {
+    type: Sequelize.DataTypes.BIGINT,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  clientId: {
+    type: Sequelize.DataTypes.BIGINT,
+    references: { model: 'clients', key: 'id' },
+  },
+  model: {
+    type: Sequelize.DataTypes.ENUM('user', 'client', 'address', 'demographic'),
+  },
+  type: { type: Sequelize.DataTypes.ENUM('create', 'update', 'delete') },
 })
 
 const WhitelistDomains = db.define('whitelist_domain', {
-    id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
-    },
-    domain: {
-        type: Sequelize.STRING,
-        allowNull: false
-    }
+  id: {
+    type: Sequelize.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  domain: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
 })
 
 if (!process.env.ONEAUTH_DB_NO_SYNC) {
-    db.sync({
-        alter: process.env.ONEAUTH_ALTER_TABLES || false,
-        force: process.env.ONEAUTH_DROP_TABLES || (config.DEPLOY_CONFIG === 'heroku'), // Clear DB on each run on heroku
-    }).then(() => {
-        console.log('Database configured')
-    }).catch(err =>
-        console.error(err)
-    )
+  db.sync({
+    alter: process.env.ONEAUTH_ALTER_TABLES || false,
+    force: process.env.ONEAUTH_DROP_TABLES || config.DEPLOY_CONFIG === 'heroku', // Clear DB on each run on heroku
+  })
+    .then(() => {
+      console.log('Database configured')
+    })
+    .catch((err) => console.error(err))
 }
 
-
 module.exports = {
-    models: {
-        User,
-        UserLocal,
-        UserFacebook,
-        UserTwitter,
-        UserGithub,
-        UserGoogle,
-        UserLinkedin,
-        UserLms,
-        Client,
-        Organisation,
-        OrgAdmin,
-        OrgMember,
-        GrantCode,
-        AuthToken,
-        Resetpassword,
-        Verifyemail,
-        Demographic,
-        Address,
-        College,
-        Company,
-        Branch,
-        State,
-        Country,
-        EventSubscription,
-        VerifyMobile,
-        UserMobileOTP,
-        WhitelistDomains
-    },
-    db
-};
+  models: {
+    User,
+    UserLocal,
+    UserFacebook,
+    UserTwitter,
+    UserGithub,
+    UserGoogle,
+    UserLinkedin,
+    UserLms,
+    Client,
+    Organisation,
+    OrgAdmin,
+    OrgMember,
+    GrantCode,
+    AuthToken,
+    Resetpassword,
+    Verifyemail,
+    Demographic,
+    Address,
+    College,
+    Company,
+    Branch,
+    State,
+    Country,
+    EventSubscription,
+    VerifyMobile,
+    UserMobileOTP,
+    WhitelistDomains,
+  },
+  db,
+}

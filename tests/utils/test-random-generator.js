@@ -1,5 +1,5 @@
-const expect = require('chai').expect
-const {genNdigitNum, genNcharAlphaNum} = require('../../src/utils/generator')
+const { expect } = require('chai')
+const { genNdigitNum, genNcharAlphaNum } = require('../../src/utils/generator')
 
 describe('random generators', () => {
   it('should create random numbers', () => {
@@ -13,5 +13,4 @@ describe('random generators', () => {
     expect(random).to.be.a('string')
     expect(random.length).to.equal(5)
   })
-
 })

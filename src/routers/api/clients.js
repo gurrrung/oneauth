@@ -7,140 +7,136 @@ const Raven = require('raven')
 const router = require('express').Router()
 const cel = require('connect-ensure-login')
 const { isURL } = require('../../utils/urlutils')
-const {
-    createClient,
-    updateClient
-} =require('../../controllers/clients');
+const { createClient, updateClient } = require('../../controllers/clients')
 
 const {
-    createEventSubscriptionBulk,
-    deleteEventSubscription
-} = require ('../../controllers/event_subscriptions');
+  createEventSubscriptionBulk,
+  deleteEventSubscription,
+} = require('../../controllers/event_subscriptions')
 
-function getEvent (id, model, type) {
-    return {
-        clientId: id,
-        model: model,
-        type: type
-    }
+function getEvent(id, model, type) {
+  return {
+    clientId: id,
+    model,
+    type,
+  }
 }
 
-router.post('/add', async function (req, res) {
-    if (!req.user) {
-        return res.status(403).send("Only logged in users can make clients")
-    }
+router.post('/add', async (req, res) => {
+  if (!req.user) {
+    return res.status(403).send('Only logged in users can make clients')
+  }
 
-    let hashRegEx = /\/#\//
-    if (hashRegEx.test(req.body.callback)) {
-        req.flash('error', '"/#/" is not allowed in Callback URL')
-        return res.redirect('/clients/add')
-    }
+  const hashRegEx = /\/#\//
+  if (hashRegEx.test(req.body.callback)) {
+    req.flash('error', '"/#/" is not allowed in Callback URL')
+    return res.redirect('/clients/add')
+  }
 
-    let options = {
-        clientName : req.body.clientname,
-        clientDomains : req.body.domain.replace(/ /g, '').split(';'),
-        clientCallbacks : req.body.callback.replace(/ /g, '').split(';'),
-        defaultURL : req.body.defaulturl.replace(/ /g, '')
-    }
+  const options = {
+    clientName: req.body.clientname,
+    clientDomains: req.body.domain.replace(/ /g, '').split(';'),
+    clientCallbacks: req.body.callback.replace(/ /g, '').split(';'),
+    defaultURL: req.body.defaulturl.replace(/ /g, ''),
+  }
 
-    if (req.body.webhookURL && isURL(req.body.webhookURL)) {
-      options.webhookURL = req.body.webhookURL
-    }
+  if (req.body.webhookURL && isURL(req.body.webhookURL)) {
+    options.webhookURL = req.body.webhookURL
+  }
 
-    try {
-        const clientid = await createClient(options, req.user.id)
-        res.redirect('/clients/' + clientid.id)
-    } catch (error) {
-        Raven.captureException(err)
-        req.flash('error', 'Could not create client')
-        res.redirect('/users/me')
-    }
+  try {
+    const clientid = await createClient(options, req.user.id)
+    res.redirect(`/clients/${clientid.id}`)
+  } catch (error) {
+    Raven.captureException(err)
+    req.flash('error', 'Could not create client')
+    res.redirect('/users/me')
+  }
 })
 
-router.post('/edit/:id', cel.ensureLoggedIn('/login'),
-    async function (req, res) {
-        try {
-            let clientId = parseInt(req.params.id)
-            let options = {
-                clientName : req.body.clientname,
-                clientDomains : req.body.domain.replace(/ /g, '').split(';'),
-                clientCallbacks : req.body.callback.replace(/ /g, '').split(';'),
-                defaultURL : req.body.defaulturl.replace(/ /g, ''),
-                androidOTPHash: req.body.androidOTPHash,
-                trustedClient : false
-            }
-            let hashRegEx = /\/#\//
-            if (hashRegEx.test(req.body.callback)) {
-                req.flash('error', '"/#/" is not allowed in Callback URL')
-                return res.redirect('/clients/' + req.params.id + '/edit')
-            }
+router.post('/edit/:id', cel.ensureLoggedIn('/login'), async (req, res) => {
+  try {
+    const clientId = parseInt(req.params.id, 10)
+    const options = {
+      clientName: req.body.clientname,
+      clientDomains: req.body.domain.replace(/ /g, '').split(';'),
+      clientCallbacks: req.body.callback.replace(/ /g, '').split(';'),
+      defaultURL: req.body.defaulturl.replace(/ /g, ''),
+      androidOTPHash: req.body.androidOTPHash,
+      trustedClient: false,
+    }
+    const hashRegEx = /\/#\//
+    if (hashRegEx.test(req.body.callback)) {
+      req.flash('error', '"/#/" is not allowed in Callback URL')
+      return res.redirect(`/clients/${req.params.id}/edit`)
+    }
 
-            if(req.user.role === 'admin'){
-                options.trustedClient = req.body.trustedClient
-            }
-            if (req.body.webhookurl && isURL(req.body.webhookurl)){
-                options.webhookURL = req.body.webhookurl
-            }
-            await updateClient(options, clientId)
+    if (req.user.role === 'admin') {
+      options.trustedClient = req.body.trustedClient
+    }
+    if (req.body.webhookurl && isURL(req.body.webhookurl)) {
+      options.webhookURL = req.body.webhookurl
+    }
+    await updateClient(options, clientId)
 
-            await deleteEventSubscription (req.params.id)
+    await deleteEventSubscription(req.params.id)
 
-            let event_subscription = []
-            // --------------------- User ------------------------------ //
-            if (req.body.event_c_user) {
-                event_subscription.push (getEvent (req.params.id, 'user', 'create'))
-            }
-            if (req.body.event_u_user) {
-                event_subscription.push (getEvent (req.params.id, 'user', 'update'))
-            }
-            if (req.body.event_d_user) {
-                event_subscription.push (getEvent (req.params.id, 'user', 'delete'))
-            }
+    const event_subscription = []
+    // --------------------- User ------------------------------ //
+    if (req.body.event_c_user) {
+      event_subscription.push(getEvent(req.params.id, 'user', 'create'))
+    }
+    if (req.body.event_u_user) {
+      event_subscription.push(getEvent(req.params.id, 'user', 'update'))
+    }
+    if (req.body.event_d_user) {
+      event_subscription.push(getEvent(req.params.id, 'user', 'delete'))
+    }
 
-            // --------------------- Demographics ------------------------------ //
+    // --------------------- Demographics ------------------------------ //
 
-            if (req.body.event_c_demographics) {
-                event_subscription.push (getEvent (req.params.id, 'demographic', 'create'))
-            }
-            if (req.body.event_u_demographics) {
-                event_subscription.push (getEvent (req.params.id, 'demographic', 'update'))
-            }
-            if (req.body.event_d_demographics) {
-                event_subscription.push (getEvent (req.params.id, 'demographic', 'delete'))
-            }
+    if (req.body.event_c_demographics) {
+      event_subscription.push(getEvent(req.params.id, 'demographic', 'create'))
+    }
+    if (req.body.event_u_demographics) {
+      event_subscription.push(getEvent(req.params.id, 'demographic', 'update'))
+    }
+    if (req.body.event_d_demographics) {
+      event_subscription.push(getEvent(req.params.id, 'demographic', 'delete'))
+    }
 
-            // --------------------- Address ------------------------------ //
+    // --------------------- Address ------------------------------ //
 
-            if (req.body.event_c_address) {
-                event_subscription.push (getEvent (req.params.id, 'address', 'create'))
-            }
-            if (req.body.event_u_address) {
-                event_subscription.push (getEvent (req.params.id, 'address', 'update'))
-            }
-            if (req.body.event_d_address) {
-                event_subscription.push (getEvent (req.params.id, 'address', 'delete'))
-            }
+    if (req.body.event_c_address) {
+      event_subscription.push(getEvent(req.params.id, 'address', 'create'))
+    }
+    if (req.body.event_u_address) {
+      event_subscription.push(getEvent(req.params.id, 'address', 'update'))
+    }
+    if (req.body.event_d_address) {
+      event_subscription.push(getEvent(req.params.id, 'address', 'delete'))
+    }
 
-            // --------------------- Client ------------------------------ //
+    // --------------------- Client ------------------------------ //
 
-            if (req.body.event_c_client) {
-                event_subscription.push (getEvent (req.params.id, 'client', 'create'))
-            }
-            if (req.body.event_u_client) {
-                event_subscription.push (getEvent (req.params.id, 'client', 'update'))
-            }
-            if (req.body.event_d_client) {
-                event_subscription.push (getEvent (req.params.id, 'client', 'delete'))
-            }
+    if (req.body.event_c_client) {
+      event_subscription.push(getEvent(req.params.id, 'client', 'create'))
+    }
+    if (req.body.event_u_client) {
+      event_subscription.push(getEvent(req.params.id, 'client', 'update'))
+    }
+    if (req.body.event_d_client) {
+      event_subscription.push(getEvent(req.params.id, 'client', 'delete'))
+    }
 
-            await createEventSubscriptionBulk (event_subscription)
+    await createEventSubscriptionBulk(event_subscription)
 
-            res.redirect('/clients/' + clientId)
-        } catch (err) {
-            Raven.captureException(err)
-            req.flash('error', 'Could not update client')
-            res.redirect('/users/me')
-        }
-    })
+    res.redirect(`/clients/${clientId}`)
+  } catch (err) {
+    Raven.captureException(err)
+    req.flash('error', 'Could not update client')
+    res.redirect('/users/me')
+  }
+})
 
 module.exports = router

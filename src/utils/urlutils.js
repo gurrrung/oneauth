@@ -3,18 +3,18 @@
  */
 
 module.exports = {
-    prefixHttp: function (url) {
-        if (url.startsWith('app://')) {
-            return url
-        }
-        if (url.substr(0, 4) !== "http") {
-            url = "http://" + url
-        }
-        return url
-    },
-
-    isURL: function (url) {
-        const regex = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})/
-        return regex.test(url)
+  prefixHttp(url) {
+    if (url.startsWith('app://')) {
+      return url
     }
+    if (url.substr(0, 4) !== 'http') {
+      url = `http://${url}`
+    }
+    return url
+  },
+
+  isURL(url) {
+    const regex = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,})/
+    return regex.test(url)
+  },
 }

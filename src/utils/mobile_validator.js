@@ -1,24 +1,24 @@
-const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
+const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance()
 
 function parseNumber(number) {
-    return phoneUtil.parseAndKeepRawInput(number, 'IN');
+  return phoneUtil.parseAndKeepRawInput(number, 'IN')
 }
 
 function parseNumberEntireString(numberString) {
-    return phoneUtil.parseAndKeepRawInput(numberString);
+  return phoneUtil.parseAndKeepRawInput(numberString)
 }
 
 function parseNumberByCountry(number, country) {
-    return phoneUtil.parseAndKeepRawInput(number, country)
+  return phoneUtil.parseAndKeepRawInput(number, country)
 }
 
 function validateNumber(number) {
-    return phoneUtil.isValidNumber(number);
+  return phoneUtil.isValidNumber(number)
 }
 
 module.exports = {
-    parseNumber,
-    parseNumberEntireString,
-    validateNumber,
-    parseNumberByCountry
+  parseNumber,
+  parseNumberEntireString,
+  validateNumber,
+  parseNumberByCountry,
 }

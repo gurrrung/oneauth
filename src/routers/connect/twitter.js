@@ -6,9 +6,12 @@ const passport = require('../../passport/passporthandler')
 
 router.get('/', passport.authorize('twitter'))
 
-router.get('/callback', passport.authorize('twitter', {
+router.get(
+  '/callback',
+  passport.authorize('twitter', {
     failureRedirect: '/login',
-    successReturnToOrRedirect: '/users/me'
-}))
+    successReturnToOrRedirect: '/users/me',
+  })
+)
 
 module.exports = router

@@ -5,10 +5,7 @@
 const uid = require('uid2')
 const Raven = require('raven')
 
-const {
-    Verifyemail,
-    User
-} = require('../db/models').models
+const { Verifyemail, User } = require('../db/models').models
 const mail = require('../utils/email')
 
 /**
@@ -18,27 +15,28 @@ const mail = require('../utils/email')
  * @param returnTo {string} URL to return to when verify link is hit
  * @returns {Verifyemail}
  */
-async function createVerifyEmailEntry (user, sendEmail = false, returnTo) {
-    let uniqueKey = uid(15)
+async function createVerifyEmailEntry(user, sendEmail = false, returnTo) {
+  const uniqueKey = uid(15)
 
-    let verifyEntry =  await Verifyemail.create({
-        key: uniqueKey,
-        userId: user.dataValues.id,
-        returnTo: returnTo,
-        include: [User]
-    })
+  const verifyEntry = await Verifyemail.create({
+    key: uniqueKey,
+    userId: user.dataValues.id,
+    returnTo,
+    include: [User],
+  })
 
-    if (sendEmail) {
-        mail.verifyEmail(user.dataValues, verifyEntry.key)
-            .then(() => {
-                // console.log('Mail sent')
-            }).catch((err) => {
-                Raven.captureException(err)
-            })
-    }
+  if (sendEmail) {
+    mail
+      .verifyEmail(user.dataValues, verifyEntry.key)
+      .then(() => {
+        // console.log('Mail sent')
+      })
+      .catch((err) => {
+        Raven.captureException(err)
+      })
+  }
 
-    return verifyEntry
-
+  return verifyEntry
 }
 
 /**
@@ -47,12 +45,12 @@ async function createVerifyEmailEntry (user, sendEmail = false, returnTo) {
  * @returns {Promise<Verifyemail>}
  */
 function findVerifyEmailEntryByKey(key) {
-    return Verifyemail.findOne({
-        where: {key}
-    })
+  return Verifyemail.findOne({
+    where: { key },
+  })
 }
 
 module.exports = {
-    createVerifyEmailEntry,
-    findVerifyEmailEntryByKey
+  createVerifyEmailEntry,
+  findVerifyEmailEntryByKey,
 }

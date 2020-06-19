@@ -6,9 +6,12 @@ const passport = require('../../passport/passporthandler')
 
 router.get('/', passport.authorize('github'))
 
-router.get('/callback', passport.authorize('github', {
+router.get(
+  '/callback',
+  passport.authorize('github', {
     failureRedirect: '/login',
-    successReturnToOrRedirect: '/users/me'
-}))
+    successReturnToOrRedirect: '/users/me',
+  })
+)
 
 module.exports = router
